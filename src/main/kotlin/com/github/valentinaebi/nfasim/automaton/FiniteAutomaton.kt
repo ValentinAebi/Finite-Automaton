@@ -97,7 +97,7 @@ data class FiniteAutomaton(
         enum class Acceptance { Accept, Reject }
 
         private fun checkIsValidId(str: String) = require(str.all { it.isLetterOrDigit() || it == '_' }) {
-            "$str is not a valid identifier only letters, digits and underscores are allowed"
+            "'$str' is not a valid identifier: only letters, digits and underscores are allowed"
         }
     }
 

@@ -1,7 +1,7 @@
 package com.github.valentinaebi.nfasim.automaton
 
 
-class FiniteAutomaton(
+data class FiniteAutomaton(
     val states: List<State>,
     val alphabet: List<Symbol>,
     val transitionFunc: List<Pair<Pair<State, Symbol>, State>>,

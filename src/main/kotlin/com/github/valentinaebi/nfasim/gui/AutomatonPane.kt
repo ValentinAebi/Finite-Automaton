@@ -8,28 +8,55 @@ import java.lang.IllegalStateException
 class AutomatonPane: Pane() {
     private val states = mutableListOf<GuiState>()
     private val transitions = mutableListOf<GuiTransition>()
+    private var initState: GuiState? = null
 
-    fun buildAutomaton(alphabet: List<Symbol>): GuiOption<FiniteAutomaton> {
-        val initStates = states.filter { it.isInit }
-        if (initStates.isEmpty()){
-            return GuiOption.Companion.Message("No initial state selected")
+    fun add(state: GuiState): Boolean {
+        val actuallyAdd = !states.any { it.underlyingState.id == state.underlyingState.id }
+        if (actuallyAdd){
+            states.add(state)
+            children.add(state)
         }
-        else if (initStates.size >= 2){
-            throw IllegalStateException("more than 1 initial state selected")
+        return actuallyAdd
+    }
+
+    fun remove(state: GuiState){
+        states.remove(state)
+        children.remove(state)
+    }
+
+    fun add(transition: GuiTransition): Boolean {
+        val actuallyAdd = !transitions.any { it.from == transition.from && it.to == transition.to }
+        if (actuallyAdd){
+            transitions.add(transition)
+            children.add(transition)
         }
-        return GuiOption.Companion.Nominal(
-            FiniteAutomaton(
-                states = states.map { it.underlyingState },
-                alphabet = alphabet,
-                transitionFunc = transitions.map {
-                    Pair(
-                        it.from.underlyingState,
-                        it.triggeringSymbol
-                    ) to it.to.underlyingState
-                },
-                initialState = initStates[0].underlyingState,
-                acceptingStates = states.filter { it.isAccepting }.map { it.underlyingState }.toSet()
-            )
+        return actuallyAdd
+    }
+
+    fun remove(transition: GuiTransition){
+        transitions.remove(transition)
+        children.remove(transition)
+    }
+
+    fun setInitState(newInitState: GuiState){
+        require(states.contains(newInitState))
+        initState?.isInit = false
+        initState = newInitState
+    }
+
+    fun buildAutomaton(alphabet: List<Symbol>): FiniteAutomaton {
+        val confirmedInitState = requireNotNull(initState) { throw IllegalStateException("cannot build automaton: no initial state selected") }
+        return FiniteAutomaton(
+            states = states.map { it.underlyingState },
+            alphabet = alphabet,
+            transitionFunc = transitions.map {
+                Pair(
+                    it.from.underlyingState,
+                    TODO()//it.triggeringSymbol
+                ) to it.to.underlyingState
+            },
+            initialState = confirmedInitState.underlyingState,
+            acceptingStates = states.filter { it.isAccepting }.map { it.underlyingState }.toSet()
         )
     }
 

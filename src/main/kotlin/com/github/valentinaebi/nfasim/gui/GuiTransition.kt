@@ -1,15 +1,17 @@
 package com.github.valentinaebi.nfasim.gui
 
 import javafx.beans.binding.Bindings
+import javafx.event.EventHandler
+import javafx.geometry.Pos
 import javafx.scene.Group
-import javafx.scene.control.Label
+import javafx.scene.control.TextField
+import javafx.scene.layout.Background
 import javafx.scene.paint.Color
 import javafx.scene.shape.Line
 import javafx.scene.text.Font
 import kotlin.math.hypot
-import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol as Symbol
 
-class GuiTransition(val from: GuiState, val to: GuiState, val triggeringSymbol: Symbol): Group() {
+class GuiTransition(val from: GuiState, val to: GuiState, val color: Color): Group() {
 
     init {
         val deltaX = requireNotNull(to.layoutXProperty().subtract(from.layoutXProperty()))
@@ -25,8 +27,8 @@ class GuiTransition(val from: GuiState, val to: GuiState, val triggeringSymbol: 
         val endY = to.layoutYProperty().add(deltaXNormalized.multiply(-shift)).subtract(startAndEndShiftY)
         val headX = endX.add(deltaXNormalized.multiply(-headLength)).add(deltaYNormalized.multiply(headWidth))
         val headY = endY.add(deltaYNormalized.multiply(-headLength)).add(deltaXNormalized.multiply(-headWidth))
-        val labelX = startX.add(endX).divide(2).add(deltaYNormalized.multiply(labelShift)).subtract(5)
-        val labelY = startY.add(endY).divide(2).add(deltaXNormalized.multiply(-labelShift)).subtract(10)
+        val fieldX = startX.multiply(1- fieldToHeadRatio).add(endX.multiply(fieldToHeadRatio)).add(deltaYNormalized.multiply(labelShift)).subtract(5)
+        val fieldY = startY.multiply(1- fieldToHeadRatio).add(endY.multiply(fieldToHeadRatio)).add(deltaXNormalized.multiply(-labelShift)).subtract(10)
         val mainLine = Line()
         mainLine.stroke = color
         mainLine.strokeWidth = strokeWidth
@@ -41,21 +43,25 @@ class GuiTransition(val from: GuiState, val to: GuiState, val triggeringSymbol: 
         headLine.startYProperty().bind(headY)
         headLine.endXProperty().bind(endX)
         headLine.endYProperty().bind(endY)
-        val label = Label(triggeringSymbol.toString())
-        label.font = font
-        label.layoutXProperty().bind(labelX)
-        label.layoutYProperty().bind(labelY)
-        children.addAll(mainLine, headLine, label)
+        val triggeringSymbolsField = TextField()
+        triggeringSymbolsField.font = font
+        triggeringSymbolsField.prefColumnCount = 10
+        triggeringSymbolsField.layoutXProperty().bind(fieldX.subtract(40.0))
+        triggeringSymbolsField.layoutYProperty().bind(fieldY.subtract(12.0))
+        triggeringSymbolsField.style = "-fx-text-inner-color: #${color.toString().drop(2)}; -fx-background-color: rgba(100, 100, 100, 0.1)"
+        triggeringSymbolsField.alignment = Pos.CENTER
+        onMouseClicked = EventHandler { triggeringSymbolsField.requestFocus() }
+        children.addAll(mainLine, headLine, triggeringSymbolsField)
     }
 
     companion object {
-        private const val shift = 5.0
+        private const val shift = 12.0
         private const val headWidth = 10.0
         private const val headLength = 30.0
         private const val strokeWidth = 5.0
-        private const val labelShift = 10.0
-        private val font = Font("cambria", 24.0)
-        private val color = Color.GREEN
+        private const val labelShift = 30.0
+        private const val fieldToHeadRatio = 0.45
+        private val font = Font("cambria", 14.0)
     }
 
 }

@@ -3,8 +3,8 @@ package com.github.valentinaebi.nfasim.automaton
 import java.io.FileReader
 import java.io.FileWriter
 import java.io.IOException
-import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol.Companion as Symbol
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.State.Companion as State
+import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol.Companion as Symbol
 
 object AutomatonIO {
 

@@ -1,6 +1,6 @@
 package com.github.valentinaebi.nfasim.gui
 
-import com.github.valentinaebi.nfasim.main
+import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.State
 import javafx.scene.Group
 import javafx.scene.control.Label
 import javafx.scene.paint.Color
@@ -8,7 +8,6 @@ import javafx.scene.shape.Circle
 import javafx.scene.shape.Polygon
 import javafx.scene.shape.StrokeType
 import javafx.scene.text.Font
-import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.State as State
 
 class GuiState(val underlyingState: State, val owner: AutomatonPane): Group() {
     private val mainCircle = Circle(radius, colorInactive)

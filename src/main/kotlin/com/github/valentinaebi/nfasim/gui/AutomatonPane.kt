@@ -3,7 +3,6 @@ package com.github.valentinaebi.nfasim.gui
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
 import javafx.scene.layout.Pane
-import java.lang.IllegalStateException
 
 class AutomatonPane: Pane() {
     private val states = mutableListOf<GuiState>()

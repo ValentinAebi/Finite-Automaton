@@ -4,7 +4,7 @@ import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
 import javafx.scene.layout.Pane
 
-class AutomatonPane: Pane() {
+class AutomatonPane(val alphabet: MutableAlphabet): Pane() {
     private val states = mutableListOf<GuiState>()
     private val transitions = mutableListOf<GuiTransition>()
     private var initState: GuiState? = null
@@ -28,6 +28,7 @@ class AutomatonPane: Pane() {
         if (actuallyAdd){
             transitions.add(transition)
             children.add(transition)
+            alphabet.addListener(transition)
         }
         return actuallyAdd
     }
@@ -35,6 +36,7 @@ class AutomatonPane: Pane() {
     fun remove(transition: GuiTransition){
         transitions.remove(transition)
         children.remove(transition)
+        alphabet.removeListener(transition)
     }
 
     fun setInitState(newInitState: GuiState){

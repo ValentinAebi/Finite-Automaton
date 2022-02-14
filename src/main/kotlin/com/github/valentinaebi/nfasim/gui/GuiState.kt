@@ -57,7 +57,7 @@ class GuiState(val underlyingState: State, val owner: AutomatonPane): Group() {
         startTriangle.fill = colorTriangle
         startTriangle.isVisible = false
         children.addAll(shadow, acceptMarkerCircle, mainCircle, nameLabel, startTriangle)
-        nameLabel.layoutX = -nameLabel.boundsInParent.width / 2.0
+        nameLabel.layoutXProperty().bind(nameLabel.widthProperty().divide(-2))
         nameLabel.layoutY = -12.5
         setOnMouseDragged { event ->
             if (canMove) run {

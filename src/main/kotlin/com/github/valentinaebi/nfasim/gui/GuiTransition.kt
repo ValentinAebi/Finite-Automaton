@@ -1,6 +1,7 @@
 package com.github.valentinaebi.nfasim.gui
 
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
+import com.github.valentinaebi.nfasim.gui.MutableAlphabet.Companion.symbolsDelimiter
 import javafx.beans.binding.Bindings
 import javafx.event.EventHandler
 import javafx.geometry.Pos
@@ -9,10 +10,20 @@ import javafx.scene.control.TextField
 import javafx.scene.paint.Color
 import javafx.scene.shape.Line
 import javafx.scene.text.Font
+import java.lang.IllegalStateException
 import kotlin.math.hypot
 
-class GuiTransition(val from: GuiState, val to: GuiState, val color: Color, val alphabet: List<Symbol>): Group() {
-    private val allSymbolsAsStr = alphabet.map { it.toString() }
+class GuiTransition(val from: GuiState, val to: GuiState, val color: Color, val alphabet: MutableAlphabet): Group() {
+
+    var isSelected = false
+        set(_isSelected){
+            field = _isSelected
+            shadow.isVisible = isSelected
+        }
+
+    private val allSymbolsAsStr = alphabet.toStringsList()
+    private val triggeringSymbolsField = TextField()
+    private val shadow = Line()
 
     init {
         val deltaX = requireNotNull(to.layoutXProperty().subtract(from.layoutXProperty()))
@@ -37,6 +48,13 @@ class GuiTransition(val from: GuiState, val to: GuiState, val color: Color, val 
         mainLine.startYProperty().bind(startY)
         mainLine.endXProperty().bind(endX)
         mainLine.endYProperty().bind(endY)
+        shadow.stroke = colorShadow
+        shadow.strokeWidth = shadowWidth
+        shadow.startXProperty().bind(startX)
+        shadow.startYProperty().bind(startY)
+        shadow.endXProperty().bind(endX)
+        shadow.endYProperty().bind(endY)
+        shadow.isVisible = false
         val headLine = Line()
         headLine.stroke = color
         headLine.strokeWidth = strokeWidth
@@ -44,7 +62,6 @@ class GuiTransition(val from: GuiState, val to: GuiState, val color: Color, val 
         headLine.startYProperty().bind(headY)
         headLine.endXProperty().bind(endX)
         headLine.endYProperty().bind(endY)
-        val triggeringSymbolsField = TextField()
         triggeringSymbolsField.font = font
         triggeringSymbolsField.prefColumnCount = 10
         triggeringSymbolsField.layoutXProperty().bind(fieldX.subtract(40.0))
@@ -52,18 +69,27 @@ class GuiTransition(val from: GuiState, val to: GuiState, val color: Color, val 
         triggeringSymbolsField.style = "-fx-text-inner-color: #${color.toString().drop(2)}; -fx-background-color: rgba(100, 100, 100, 0.1)"
         triggeringSymbolsField.alignment = Pos.CENTER
         triggeringSymbolsField.textProperty().addListener { _, oldVal, newVal ->
-            if (!checkTriggeringSymbolsField(newVal)) triggeringSymbolsField.text = oldVal
+            if (!alphabet.checkTextSymbolList(newVal)) triggeringSymbolsField.text = oldVal
         }
         onMouseClicked = EventHandler { triggeringSymbolsField.requestFocus() }
         children.addAll(mainLine, headLine, triggeringSymbolsField)
     }
 
-    private fun checkTriggeringSymbolsField(str: String): Boolean {
-        val spacesRemoved = str.filter { !it.isWhitespace() }
-        val split = spacesRemoved.split(',')
-        return spacesRemoved.isEmpty() || (split.all{ allSymbolsAsStr.contains(it) || it.isEmpty() } && split.toSet().size == split.size)
+    fun getTriggeringSymbols(): List<Symbol> {
+        val text = triggeringSymbolsField.text
+        if (!alphabet.checkTextSymbolList(text)){
+            throw IllegalStateException("invalid specification of triggering symbols")
+        }
+        return text.split(symbolsDelimiter).map { Symbol(it) }
     }
 
+    fun handleAlphabetChange(){
+        val newText = triggeringSymbolsField.text
+            .split(symbolsDelimiter)
+            .filter { alphabet.containsSymbolMatching(it) }
+            .joinToString()
+        triggeringSymbolsField.text = newText
+    }
 
     companion object {
         private const val shift = 12.0
@@ -72,7 +98,9 @@ class GuiTransition(val from: GuiState, val to: GuiState, val color: Color, val 
         private const val strokeWidth = 5.0
         private const val labelShift = 30.0
         private const val fieldToHeadRatio = 0.45
+        private const val shadowWidth = 12.0
         private val font = Font("cambria", 14.0)
+        private val colorShadow = Color.GRAY
     }
 
 }

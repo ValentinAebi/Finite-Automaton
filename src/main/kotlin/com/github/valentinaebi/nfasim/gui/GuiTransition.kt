@@ -1,17 +1,18 @@
 package com.github.valentinaebi.nfasim.gui
 
+import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
 import javafx.beans.binding.Bindings
 import javafx.event.EventHandler
 import javafx.geometry.Pos
 import javafx.scene.Group
 import javafx.scene.control.TextField
-import javafx.scene.layout.Background
 import javafx.scene.paint.Color
 import javafx.scene.shape.Line
 import javafx.scene.text.Font
 import kotlin.math.hypot
 
-class GuiTransition(val from: GuiState, val to: GuiState, val color: Color): Group() {
+class GuiTransition(val from: GuiState, val to: GuiState, val color: Color, val alphabet: List<Symbol>): Group() {
+    private val allSymbolsAsStr = alphabet.map { it.toString() }
 
     init {
         val deltaX = requireNotNull(to.layoutXProperty().subtract(from.layoutXProperty()))
@@ -50,9 +51,19 @@ class GuiTransition(val from: GuiState, val to: GuiState, val color: Color): Gro
         triggeringSymbolsField.layoutYProperty().bind(fieldY.subtract(12.0))
         triggeringSymbolsField.style = "-fx-text-inner-color: #${color.toString().drop(2)}; -fx-background-color: rgba(100, 100, 100, 0.1)"
         triggeringSymbolsField.alignment = Pos.CENTER
+        triggeringSymbolsField.textProperty().addListener { _, oldVal, newVal ->
+            if (!checkTriggeringSymbolsField(newVal)) triggeringSymbolsField.text = oldVal
+        }
         onMouseClicked = EventHandler { triggeringSymbolsField.requestFocus() }
         children.addAll(mainLine, headLine, triggeringSymbolsField)
     }
+
+    private fun checkTriggeringSymbolsField(str: String): Boolean {
+        val spacesRemoved = str.filter { !it.isWhitespace() }
+        val split = spacesRemoved.split(',')
+        return spacesRemoved.isEmpty() || (split.all{ allSymbolsAsStr.contains(it) || it.isEmpty() } && split.toSet().size == split.size)
+    }
+
 
     companion object {
         private const val shift = 12.0

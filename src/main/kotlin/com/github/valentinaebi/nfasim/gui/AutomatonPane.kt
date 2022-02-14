@@ -12,6 +12,8 @@ class AutomatonPane(val alphabet: MutableAlphabet): Pane() {
     fun add(state: GuiState): Boolean {
         val actuallyAdd = !states.any { it.underlyingState.id == state.underlyingState.id }
         if (actuallyAdd){
+            state.layoutX = 50.0
+            state.layoutY = 50.0    // FIXME
             states.add(state)
             children.add(state)
         }
@@ -20,6 +22,11 @@ class AutomatonPane(val alphabet: MutableAlphabet): Pane() {
 
     fun remove(state: GuiState){
         states.remove(state)
+        for (transition in transitions){
+            if (transition.from == state || transition.to == state){
+                remove(transition)
+            }
+        }
         children.remove(state)
     }
 
@@ -45,16 +52,21 @@ class AutomatonPane(val alphabet: MutableAlphabet): Pane() {
         initState = newInitState
     }
 
+    fun getStates(): List<GuiState> = states.toList()
+    fun getTransitions(): List<GuiTransition> = transitions.toList()
+
     fun buildAutomaton(alphabet: List<Symbol>): FiniteAutomaton {
         val confirmedInitState = requireNotNull(initState) { throw IllegalStateException("cannot build automaton: no initial state selected") }
         return FiniteAutomaton(
             states = states.map { it.underlyingState },
             alphabet = alphabet,
-            transitionFunc = transitions.map {
-                Pair(
-                    it.from.underlyingState,
-                    TODO()//it.triggeringSymbol
-                ) to it.to.underlyingState
+            transitionFunc = transitions.flatMap { tr ->
+                tr.getTriggeringSymbols().map { trigSym ->
+                    Pair(
+                        tr.from.underlyingState,
+                        trigSym,
+                    ) to tr.to.underlyingState
+                 }
             },
             initialState = confirmedInitState.underlyingState,
             acceptingStates = states.filter { it.isAccepting }.map { it.underlyingState }.toSet()

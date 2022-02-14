@@ -37,6 +37,7 @@ class GuiState(val underlyingState: State, val owner: AutomatonPane): Group() {
             field = _isAccepting
             acceptMarkerCircle.isVisible = isAccepting
         }
+    var canMove = true
 
     init {
         mainCircle.strokeWidth = strokeWidth
@@ -58,7 +59,12 @@ class GuiState(val underlyingState: State, val owner: AutomatonPane): Group() {
         children.addAll(shadow, acceptMarkerCircle, mainCircle, nameLabel, startTriangle)
         nameLabel.layoutX = -nameLabel.boundsInParent.width / 2.0
         nameLabel.layoutY = -12.5
-        setOnMouseDragged { event -> layoutX = event.sceneX ; layoutY = event.sceneY }
+        setOnMouseDragged { event ->
+            if (canMove) run {
+                layoutX = event.sceneX
+                layoutY = event.sceneY
+            }
+        }
     }
 
     companion object {

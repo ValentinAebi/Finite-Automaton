@@ -3,7 +3,6 @@ package com.github.valentinaebi.nfasim.gui
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.State
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
 import javafx.beans.binding.Bindings
-import javafx.beans.value.ChangeListener
 import javafx.event.EventHandler
 import javafx.geometry.Pos
 import javafx.scene.control.*
@@ -13,6 +12,8 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.Pane
 import javafx.scene.paint.Color
 import javafx.scene.shape.Line
+import javafx.scene.text.Font
+import javafx.scene.text.FontWeight
 
 class ControlledAutomatonPane: BorderPane() {
     private val alphabet = MutableAlphabet()
@@ -30,7 +31,7 @@ class ControlledAutomatonPane: BorderPane() {
         val nameField = TextField()
         addStateButton.onAction = EventHandler {
             if (!automatonPane.getStates().any { it.underlyingState.id == nameField.text }){
-                val state = GuiState(State(nameField.text))
+                val state = GuiState(State(nameField.text), automatonPane)
                 state.onMouseClicked = EventHandler { event -> if (event.isStillSincePress) onStateClicked(state) }
                 automatonPane.add(state)
                 nameField.text = ""
@@ -71,11 +72,23 @@ class ControlledAutomatonPane: BorderPane() {
                 alphabetField.text = oldVal
             }
         }
+        val typeLabel = Label()
+        typeLabel.textProperty().bind(
+            Bindings.`when`(automatonPane.isMachineProperty).then(
+                Bindings.`when`(automatonPane.isDfaProperty).then("DFA").otherwise("NFA")
+            ).otherwise("")
+        )
         alphabetField.text = defaultAlphabetTextFieldContent
         val alphabetLabel = Label("Alphabet: ")
-        val bar = HBox(nameField, addStateButton, deleteButton, modeChooser, alphabetLabel, alphabetField)
+        val bar = HBox(nameField, addStateButton, deleteButton, modeChooser, alphabetLabel, alphabetField, typeLabel)
         bar.alignment = Pos.CENTER_LEFT
-        bar.style = "-fx-background-color: lightgray; -fx-spacing: 5;"
+        bar.style = "-fx-background-color: lightgray; -fx-spacing: 7;"
+        nameField.font = font
+        addStateButton.font
+        deleteButton.font = font
+        alphabetLabel.font = font
+        alphabetField.font = font
+        typeLabel.font = Font.font(font.family, FontWeight.BOLD, 20.0)
         return bar
     }
 
@@ -117,6 +130,8 @@ class ControlledAutomatonPane: BorderPane() {
                     automatonPane.children.add(line)
                     line.startXProperty().bind(state.layoutXProperty())
                     line.startYProperty().bind(state.layoutYProperty())
+                    line.endX = line.startX + 10
+                    line.endY = line.startY
                     onMouseMoved = EventHandler { event -> line.endX = event.sceneX ; line.endY = event.sceneY }
                 }
                 else {
@@ -124,13 +139,13 @@ class ControlledAutomatonPane: BorderPane() {
                         if (!automatonPane.getTransitions().any { it.from == fromState && it.to == state }){
                             val transition =
                                 if (fromState == state) {
-                                    GuiSelfTransition(fromState, colorSelfTransition, alphabet)
+                                    GuiSelfTransition(fromState, colorSelfTransition, alphabet, automatonPane)
                                 }
                                 else {
                                     val color =
                                         if (automatonPane.getTransitions().any { it.from == state && it.to == fromState }) colorTransition2
                                         else colorTransition1
-                                    GuiStateChangingTransition(fromState, state, color, alphabet)
+                                    GuiStateChangingTransition(fromState, state, color, alphabet, automatonPane)
                                 }
                             transition.onMouseClicked = EventHandler { event -> if (event.isStillSincePress) onTransitionClicked(transition) }
                             automatonPane.add(transition)
@@ -173,6 +188,7 @@ class ControlledAutomatonPane: BorderPane() {
         private val colorTransition1 = Color.GREEN
         private val colorTransition2 = Color.BLUE
         private val colorSelfTransition = Color.PURPLE
+        private val font = Font("cambria", 14.0)
     }
 
 }

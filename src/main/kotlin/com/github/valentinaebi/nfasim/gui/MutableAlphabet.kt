@@ -1,11 +1,18 @@
 package com.github.valentinaebi.nfasim.gui
 
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
-import javax.swing.event.ChangeListener
 
 class MutableAlphabet {
     private val symbols = mutableListOf<Symbol>()
     private val listeners = mutableListOf<GuiTransition>()
+
+    fun setSymbols(newSymbols: List<Symbol>){
+        symbols.clear()
+        for (symbol in newSymbols){
+            symbols.add(symbol)
+        }
+        invokeOnSymbolsChanged()
+    }
 
     fun addSymbol(symbol: Symbol){
         symbols.add(symbol)

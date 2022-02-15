@@ -1,5 +1,7 @@
 package com.github.valentinaebi.nfasim.automaton
 
+import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol.Companion as Symbol
+
 object TestAutomata {
 
     val q0 = FiniteAutomaton.Companion.State("q0")
@@ -7,9 +9,9 @@ object TestAutomata {
     val q2 = FiniteAutomaton.Companion.State("q2")
     val q3 = FiniteAutomaton.Companion.State("q3")
 
-    val a = FiniteAutomaton.Symbol("a")
-    val b = FiniteAutomaton.Symbol("b")
-    val c = FiniteAutomaton.Symbol("c")
+    val a = Symbol.parse("a")
+    val b = Symbol.parse("b")
+    val c = Symbol.parse("c")
 
     val simpleNfa = FiniteAutomaton(
         states = listOf(q0, q1, q2, q3),

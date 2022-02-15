@@ -65,7 +65,7 @@ class ControlledAutomatonPane: BorderPane() {
             if (split.all {
                         s -> s.all { it.isLetterOrDigit() || it == '_' || it.isWhitespace() }
             }){
-                alphabet.setSymbols(split.map { Symbol(it) })
+                alphabet.setSymbols(split.map { Symbol.parse(it) })
             }
             else {
                 alphabetField.text = oldVal

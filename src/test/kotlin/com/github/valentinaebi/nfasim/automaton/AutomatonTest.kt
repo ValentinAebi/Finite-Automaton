@@ -1,10 +1,6 @@
 package com.github.valentinaebi.nfasim.automaton
 
-import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Acceptance
-import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.State
-import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
-import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Epsilon
 import com.github.valentinaebi.nfasim.automaton.TestAutomata.a
 import com.github.valentinaebi.nfasim.automaton.TestAutomata.b
 import com.github.valentinaebi.nfasim.automaton.TestAutomata.c

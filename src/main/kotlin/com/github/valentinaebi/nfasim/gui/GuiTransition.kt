@@ -44,7 +44,7 @@ abstract class GuiTransition(val color: Color, val shadowAsShape: Shape): Group(
         if (!alphabet.checkTextSymbolList(text)){
             throw IllegalStateException("invalid specification of triggering symbols")
         }
-        return text.split(symbolsDelimiter).map { Symbol(it) }
+        return text.split(symbolsDelimiter).map { Symbol.parse(it) }
     }
 
     fun handleAlphabetChange(){

@@ -66,14 +66,13 @@ data class FiniteAutomaton(
 
     companion object {
 
-        private const val epsilonStr: String = "~"
+        const val epsilonStr: String = "~"
 
-        fun Symbol(repres: String): Symbol = TrueSymbol(repres)
         sealed interface Symbol {
             companion object {
-                fun parse(repres: String): Symbol = when(repres) {
+                fun parse(repres: String): Symbol = when(repres.trim()) {
                     epsilonStr -> Epsilon
-                    else -> Symbol(repres)
+                    else -> TrueSymbol(repres)
                 }
             }
         }

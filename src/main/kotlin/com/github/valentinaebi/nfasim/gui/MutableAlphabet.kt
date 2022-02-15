@@ -1,6 +1,7 @@
 package com.github.valentinaebi.nfasim.gui
 
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
+import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.epsilonStr
 
 class MutableAlphabet {
     private val symbols = mutableListOf<Symbol>()
@@ -42,7 +43,11 @@ class MutableAlphabet {
         val spacesRemoved = str.filter { !it.isWhitespace() }
         val split = spacesRemoved.split(symbolsDelimiter)
         val allSymbolsAsStr = getCurrentSymbols().map { it.toString() }
-        return spacesRemoved.isEmpty() || (split.all{ allSymbolsAsStr.contains(it) || it.isEmpty() } && split.toSet().size == split.size)
+        return spacesRemoved.isEmpty() || (
+            split.all{
+                allSymbolsAsStr.contains(it) || it == epsilonStr || it.isEmpty()
+            } && split.toSet().size == split.size
+        )
     }
 
     private fun invokeOnSymbolsChanged() {

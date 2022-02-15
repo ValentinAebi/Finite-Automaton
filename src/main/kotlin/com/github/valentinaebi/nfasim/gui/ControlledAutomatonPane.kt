@@ -1,13 +1,12 @@
 package com.github.valentinaebi.nfasim.gui
 
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.State
+import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
 import javafx.beans.binding.Bindings
+import javafx.beans.value.ChangeListener
 import javafx.event.EventHandler
 import javafx.geometry.Pos
-import javafx.scene.control.Button
-import javafx.scene.control.ChoiceBox
-import javafx.scene.control.Label
-import javafx.scene.control.TextField
+import javafx.scene.control.*
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
@@ -18,7 +17,7 @@ import javafx.scene.shape.Line
 class ControlledAutomatonPane: BorderPane() {
     private val alphabet = MutableAlphabet()
     private val automatonPane = AutomatonPane(alphabet)
-    private val currentMode = Mode.Select
+    private var currentMode = Mode.Select
     private var partiallyBuiltTransition: Pair<GuiState, Line>? = null
 
     init {
@@ -30,13 +29,21 @@ class ControlledAutomatonPane: BorderPane() {
         val addStateButton = Button("Add state")
         val nameField = TextField()
         addStateButton.onAction = EventHandler {
-            val state = GuiState(State(nameField.text), automatonPane)
-            state.onMouseClicked = EventHandler { event -> if (event.isStillSincePress) onStateClicked(state) }
-            automatonPane.add(state)
-            nameField.text = ""
+            if (!automatonPane.getStates().any { it.underlyingState.id == nameField.text }){
+                val state = GuiState(State(nameField.text))
+                state.onMouseClicked = EventHandler { event -> if (event.isStillSincePress) onStateClicked(state) }
+                automatonPane.add(state)
+                nameField.text = ""
+            }
         }
         addStateButton.disableProperty().bind(Bindings.createBooleanBinding({ nameField.text.isEmpty() }, nameField.textProperty()))
         nameField.onKeyPressed = EventHandler { event -> if (event.code == KeyCode.ENTER) addStateButton.fire() }
+        nameField.textProperty().addListener { _, oldValue, newValue ->
+            if (!newValue.all { it.isLetterOrDigit() || it == '_' }) nameField.text = oldValue
+            nameField.style =
+                if (automatonPane.getStates().any { it.underlyingState.id == nameField.text }) "-fx-border-color: red"
+                else "-fx-border: default"
+        }
         val deleteButton = Button("Delete")
         deleteButton.onAction = EventHandler {
             automatonPane.getStates().filter { it.isSelected }.forEach(automatonPane::remove)
@@ -48,17 +55,23 @@ class ControlledAutomatonPane: BorderPane() {
             if (oldIdx != -1){
                 onModeTearDown(modeChooser.items[oldIdx!!.toInt()])
             }
-            onModeSetup(modeChooser.items[newIdx!!.toInt()])
+            currentMode = modeChooser.items[newIdx!!.toInt()]
+            onModeSetup(currentMode)
         }
+        modeChooser.selectionModel.select(Mode.Select)
         val alphabetField = TextField()
         alphabetField.textProperty().addListener { _, oldVal, newVal ->
-            if (!newVal.split(MutableAlphabet.symbolsDelimiter)
-                    .all {
-                        s -> s.all { it.isLetterOrDigit() || it == '_' }
-                    }){
+            val split = newVal.filter { !it.isWhitespace() }.split(MutableAlphabet.symbolsDelimiter)
+            if (split.all {
+                        s -> s.all { it.isLetterOrDigit() || it == '_' || it.isWhitespace() }
+            }){
+                alphabet.setSymbols(split.map { Symbol(it) })
+            }
+            else {
                 alphabetField.text = oldVal
             }
         }
+        alphabetField.text = defaultAlphabetTextFieldContent
         val alphabetLabel = Label("Alphabet: ")
         val bar = HBox(nameField, addStateButton, deleteButton, modeChooser, alphabetLabel, alphabetField)
         bar.alignment = Pos.CENTER_LEFT
@@ -68,23 +81,25 @@ class ControlledAutomatonPane: BorderPane() {
 
     private fun onModeSetup(mode: Mode){
         when (mode){
-            Mode.Select -> {
-                automatonPane.getStates().forEach { it.canMove = true }
-            }
+            Mode.Select -> { }
             Mode.CreateTransition -> { }
+            Mode.MarkAccept -> { }
+            Mode.MarkInit -> { }
         }
     }
 
     private fun onModeTearDown(mode: Mode){
         when (mode){
             Mode.Select -> {
-                automatonPane.getStates().forEach { it.isSelected = false; it.canMove = false }
+                automatonPane.getStates().forEach { it.isSelected = false }
             }
             Mode.CreateTransition -> {
-                partiallyBuiltTransition?.let { automatonPane.children.remove(it.first) }
+                partiallyBuiltTransition?.let { automatonPane.children.remove(it.second) }
                 partiallyBuiltTransition = null
                 onMouseMoved = null
             }
+            Mode.MarkAccept -> { }
+            Mode.MarkInit -> { }
         }
     }
 
@@ -96,23 +111,36 @@ class ControlledAutomatonPane: BorderPane() {
             Mode.CreateTransition -> {
                 if (partiallyBuiltTransition == null){
                     val line = Line()
-                    line.stroke = Color.YELLOW.brighter()
+                    line.stroke = colorPartiallyBuiltLine
                     line.strokeWidth = partiallyBuiltTransitionLineWidth
+                    partiallyBuiltTransition = Pair(state, line)
+                    automatonPane.children.add(line)
                     line.startXProperty().bind(state.layoutXProperty())
                     line.startYProperty().bind(state.layoutYProperty())
                     onMouseMoved = EventHandler { event -> line.endX = event.sceneX ; line.endY = event.sceneY }
-                    partiallyBuiltTransition = Pair(state, line)
-                    children.add(line)
                 }
                 else {
-                    partiallyBuiltTransition?.let {
-                        val transition = GuiTransition(it.first, state, Color.BLUE, alphabet)
-                        transition.onMouseClicked = EventHandler { event -> if (event.isStillSincePress) onTransitionClicked(transition) }
-                        automatonPane.add(transition)
+                    partiallyBuiltTransition?.let { (fromState, line) ->
+                        if (!automatonPane.getTransitions().any { it.from == fromState && it.to == state }){
+                            val color =
+                                if (automatonPane.getTransitions().any { it.from == state && it.to == fromState }) colorTransition2
+                                else colorTransition1
+                            val transition = GuiTransition(fromState, state, color, alphabet)
+                            transition.onMouseClicked = EventHandler { event -> if (event.isStillSincePress) onTransitionClicked(transition) }
+                            automatonPane.add(transition)
+                        }
+                        automatonPane.children.remove(line)
                     }
                     partiallyBuiltTransition = null
                     onMouseMoved = null
                 }
+            }
+            Mode.MarkAccept -> {
+                state.isAccepting = !state.isAccepting
+            }
+            Mode.MarkInit -> {
+                state.isInit = !state.isInit
+                automatonPane.getStates().filter { it != state }.forEach { it.isInit = false }
             }
         }
     }
@@ -123,14 +151,20 @@ class ControlledAutomatonPane: BorderPane() {
                 transition.isSelected = !transition.isSelected
             }
             Mode.CreateTransition -> { }
+            Mode.MarkAccept -> { }
+            Mode.MarkInit -> { }
         }
     }
 
     companion object {
         private enum class Mode {
-            Select, CreateTransition
+            Select, CreateTransition, MarkAccept, MarkInit
         }
+        private const val defaultAlphabetTextFieldContent = "0, 1"
         private const val partiallyBuiltTransitionLineWidth = 4.0
+        private val colorPartiallyBuiltLine = Color.GREEN
+        private val colorTransition1 = Color.GREEN
+        private val colorTransition2 = Color.BLUE
     }
 
 }

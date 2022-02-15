@@ -9,7 +9,7 @@ import javafx.scene.shape.Polygon
 import javafx.scene.shape.StrokeType
 import javafx.scene.text.Font
 
-class GuiState(val underlyingState: State): Group() {
+class GuiState(val underlyingState: State, val owner: AutomatonPane): Group() {
     private val mainCircle = Circle(radius, colorInactive)
     private val acceptMarkerCircle = Circle(radius + strokeWidth, Color.TRANSPARENT)
     private val shadow = Circle(shadowRadius, colorShadow)
@@ -30,11 +30,13 @@ class GuiState(val underlyingState: State): Group() {
         set(_isInit){
             field = _isInit
             startTriangle.isVisible = isInit
+            owner.reportMachineUpdate()
         }
     var isAccepting = false
         set(_isAccepting){
             field = _isAccepting
             acceptMarkerCircle.isVisible = isAccepting
+            owner.reportMachineUpdate()
         }
 
     init {
@@ -73,7 +75,7 @@ class GuiState(val underlyingState: State): Group() {
         private val colorInactive = Color.YELLOW
         private val colorActive = Color.ORANGE
         private val colorShadow = Color.LIGHTGRAY
-        private val colorTriangle = Color.GREEN
+        private val colorTriangle = Color.BROWN
         private val colorStroke = Color.BLACK
     }
 

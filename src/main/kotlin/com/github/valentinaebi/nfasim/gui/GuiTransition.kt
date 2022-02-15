@@ -1,6 +1,5 @@
 package com.github.valentinaebi.nfasim.gui
 
-import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
 import com.github.valentinaebi.nfasim.gui.MutableAlphabet.Companion.symbolsDelimiter
 import javafx.event.EventHandler
@@ -18,6 +17,7 @@ abstract class GuiTransition(val color: Color, val shadowAsShape: Shape): Group(
     abstract val from: GuiState
     abstract val to: GuiState
     abstract val alphabet: MutableAlphabet
+    abstract val owner: AutomatonPane
 
     var isSelected = false
         set(_isSelected){
@@ -31,7 +31,10 @@ abstract class GuiTransition(val color: Color, val shadowAsShape: Shape): Group(
         triggeringSymbolsField.style = "-fx-text-inner-color: #${color.toString().drop(2)}; -fx-background-color: rgba(100, 100, 100, 0.1)"
         triggeringSymbolsField.alignment = Pos.CENTER
         triggeringSymbolsField.textProperty().addListener { _, oldVal, newVal ->
-            if (!alphabet.checkTextSymbolList(newVal)) triggeringSymbolsField.text = oldVal
+            if (!alphabet.checkTextSymbolList(newVal)) {
+                triggeringSymbolsField.text = oldVal
+            }
+            owner.reportMachineUpdate()
         }
         onMouseClicked = EventHandler { triggeringSymbolsField.requestFocus() }
         shadowAsShape.stroke = colorShadow
@@ -53,7 +56,10 @@ abstract class GuiTransition(val color: Color, val shadowAsShape: Shape): Group(
             .filter { alphabet.containsSymbolMatching(it) }
             .joinToString()
         triggeringSymbolsField.text = newText
+        owner.reportMachineUpdate()
     }
+
+    fun currentText(): String = triggeringSymbolsField.text
 
     companion object {
         private val font = Font("cambria", 14.0)

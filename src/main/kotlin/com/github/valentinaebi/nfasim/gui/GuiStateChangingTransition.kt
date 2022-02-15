@@ -9,7 +9,8 @@ class GuiStateChangingTransition(
         override val from: GuiState,
         override val to: GuiState,
         private val _color: Color,
-        override val alphabet: MutableAlphabet
+        override val alphabet: MutableAlphabet,
+        override val owner: AutomatonPane
     ): GuiTransition(_color, Line()) {
 
     private val shadow = shadowAsShape as Line

@@ -122,12 +122,19 @@ class ControlledAutomatonPane: BorderPane() {
                 else {
                     partiallyBuiltTransition?.let { (fromState, line) ->
                         if (!automatonPane.getTransitions().any { it.from == fromState && it.to == state }){
-                            val color =
-                                if (automatonPane.getTransitions().any { it.from == state && it.to == fromState }) colorTransition2
-                                else colorTransition1
-                            val transition = GuiTransition(fromState, state, color, alphabet)
+                            val transition =
+                                if (fromState == state) {
+                                    GuiSelfTransition(fromState, colorSelfTransition, alphabet)
+                                }
+                                else {
+                                    val color =
+                                        if (automatonPane.getTransitions().any { it.from == state && it.to == fromState }) colorTransition2
+                                        else colorTransition1
+                                    GuiStateChangingTransition(fromState, state, color, alphabet)
+                                }
                             transition.onMouseClicked = EventHandler { event -> if (event.isStillSincePress) onTransitionClicked(transition) }
                             automatonPane.add(transition)
+                            transition.toBack()
                         }
                         automatonPane.children.remove(line)
                     }
@@ -165,6 +172,7 @@ class ControlledAutomatonPane: BorderPane() {
         private val colorPartiallyBuiltLine = Color.GREEN
         private val colorTransition1 = Color.GREEN
         private val colorTransition2 = Color.BLUE
+        private val colorSelfTransition = Color.PURPLE
     }
 
 }

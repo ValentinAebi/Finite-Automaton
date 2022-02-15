@@ -9,7 +9,7 @@ import javafx.scene.shape.Polygon
 import javafx.scene.shape.StrokeType
 import javafx.scene.text.Font
 
-class GuiState(val underlyingState: State, val owner: AutomatonPane): Group() {
+class GuiState(val underlyingState: State): Group() {
     private val mainCircle = Circle(radius, colorInactive)
     private val acceptMarkerCircle = Circle(radius + strokeWidth, Color.TRANSPARENT)
     private val shadow = Circle(shadowRadius, colorShadow)
@@ -30,14 +30,12 @@ class GuiState(val underlyingState: State, val owner: AutomatonPane): Group() {
         set(_isInit){
             field = _isInit
             startTriangle.isVisible = isInit
-            owner.setInitState(this)
         }
     var isAccepting = false
         set(_isAccepting){
             field = _isAccepting
             acceptMarkerCircle.isVisible = isAccepting
         }
-    var canMove = true
 
     init {
         mainCircle.strokeWidth = strokeWidth
@@ -60,10 +58,8 @@ class GuiState(val underlyingState: State, val owner: AutomatonPane): Group() {
         nameLabel.layoutXProperty().bind(nameLabel.widthProperty().divide(-2))
         nameLabel.layoutY = -12.5
         setOnMouseDragged { event ->
-            if (canMove) run {
-                layoutX = event.sceneX
-                layoutY = event.sceneY
-            }
+            layoutX = event.sceneX
+            layoutY = event.sceneY
         }
     }
 

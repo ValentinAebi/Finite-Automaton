@@ -7,13 +7,12 @@ import javafx.scene.layout.Pane
 class AutomatonPane(val alphabet: MutableAlphabet): Pane() {
     private val states = mutableListOf<GuiState>()
     private val transitions = mutableListOf<GuiTransition>()
-    private var initState: GuiState? = null
 
     fun add(state: GuiState): Boolean {
         val actuallyAdd = !states.any { it.underlyingState.id == state.underlyingState.id }
         if (actuallyAdd){
-            state.layoutX = 50.0
-            state.layoutY = 50.0    // FIXME
+            state.layoutX = defaultX
+            state.layoutY = defaultY
             states.add(state)
             children.add(state)
         }
@@ -46,17 +45,10 @@ class AutomatonPane(val alphabet: MutableAlphabet): Pane() {
         alphabet.removeListener(transition)
     }
 
-    fun setInitState(newInitState: GuiState){
-        require(states.contains(newInitState))
-        initState?.isInit = false
-        initState = newInitState
-    }
-
     fun getStates(): List<GuiState> = states.toList()
     fun getTransitions(): List<GuiTransition> = transitions.toList()
 
     fun buildAutomaton(alphabet: List<Symbol>): FiniteAutomaton {
-        val confirmedInitState = requireNotNull(initState) { throw IllegalStateException("cannot build automaton: no initial state selected") }
         return FiniteAutomaton(
             states = states.map { it.underlyingState },
             alphabet = alphabet,
@@ -68,9 +60,14 @@ class AutomatonPane(val alphabet: MutableAlphabet): Pane() {
                     ) to tr.to.underlyingState
                  }
             },
-            initialState = confirmedInitState.underlyingState,
+            initialState = states.find { it.isInit }!!.underlyingState,
             acceptingStates = states.filter { it.isAccepting }.map { it.underlyingState }.toSet()
         )
+    }
+
+    companion object {
+        private const val defaultX = 50.0
+        private const val defaultY = 50.0
     }
 
 }

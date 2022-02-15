@@ -15,15 +15,16 @@ import kotlin.math.hypot
 
 class GuiTransition(val from: GuiState, val to: GuiState, val color: Color, val alphabet: MutableAlphabet): Group() {
 
+    // TODO transition from a state to itself
+
+    private val triggeringSymbolsField = TextField()
+    private val shadow = Line()
+
     var isSelected = false
         set(_isSelected){
             field = _isSelected
             shadow.isVisible = isSelected
         }
-
-    private val allSymbolsAsStr = alphabet.toStringsList()
-    private val triggeringSymbolsField = TextField()
-    private val shadow = Line()
 
     init {
         val deltaX = requireNotNull(to.layoutXProperty().subtract(from.layoutXProperty()))
@@ -72,7 +73,7 @@ class GuiTransition(val from: GuiState, val to: GuiState, val color: Color, val 
             if (!alphabet.checkTextSymbolList(newVal)) triggeringSymbolsField.text = oldVal
         }
         onMouseClicked = EventHandler { triggeringSymbolsField.requestFocus() }
-        children.addAll(mainLine, headLine, triggeringSymbolsField)
+        children.addAll(shadow, mainLine, headLine, triggeringSymbolsField)
     }
 
     fun getTriggeringSymbols(): List<Symbol> {

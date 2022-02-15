@@ -8,8 +8,9 @@ import javafx.stage.Stage
 class Main : Application() {
 
     override fun start(stage: Stage) {
-        stage.width = 1000.0
-        stage.height = 700.0
+        stage.minWidth = 500.0
+        stage.minHeight = 400.0
+        stage.isMaximized = true
         stage.scene = Scene(ControlledAutomatonPane())
         stage.show()
     }

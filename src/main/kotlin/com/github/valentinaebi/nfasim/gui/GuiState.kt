@@ -1,6 +1,7 @@
 package com.github.valentinaebi.nfasim.gui
 
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.State
+import javafx.geometry.Point2D
 import javafx.scene.Group
 import javafx.scene.control.Label
 import javafx.scene.paint.Color
@@ -60,8 +61,9 @@ class GuiState(val underlyingState: State, val owner: AutomatonPane): Group() {
         nameLabel.layoutXProperty().bind(nameLabel.widthProperty().divide(-2))
         nameLabel.layoutY = -12.5
         setOnMouseDragged { event ->
-            layoutX = event.sceneX
-            layoutY = event.sceneY
+            val localPoint = owner.sceneToLocal(Point2D(event.sceneX, event.sceneY))
+            layoutX = localPoint.x
+            layoutY = localPoint.y
         }
     }
 

@@ -1,8 +1,6 @@
 package com.github.valentinaebi.nfasim.automaton
 
-import java.io.FileReader
-import java.io.FileWriter
-import java.io.IOException
+import java.io.*
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.State.Companion as State
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol.Companion as Symbol
 
@@ -15,7 +13,27 @@ object AutomatonIO {
     private const val tagClosing: String = "]"
     private const val commentMarker: String = "#"
 
-    fun write(automaton: FiniteAutomaton, fileName: String) {
+    fun write(automaton: FiniteAutomaton, file: File): Boolean {
+        return try {
+            val writer = FileWriter(file)
+            write(automaton, writer)
+            true
+        } catch (e: IOException){
+            false
+        }
+    }
+
+    fun write(automaton: FiniteAutomaton, filename: String): Boolean {
+        return try {
+            val writer = FileWriter(filename)
+            write(automaton, writer)
+            true
+        } catch (e: IOException){
+            false
+        }
+    }
+
+    fun write(automaton: FiniteAutomaton, fileWriter: FileWriter) {
 
         fun <T>addSubsection(sb: StringBuilder, ls: Collection<T>, tag: Tag) {
             sb.append(tag.surrounded())
@@ -35,10 +53,28 @@ object AutomatonIO {
         addSubsection(sb, automaton.acceptingStates, Tag.Accept)
         sb.append("\n")
         val str = sb.toString()
-        FileWriter(fileName).use { it.write(str) }
+        fileWriter.use { it.write(str) }
     }
 
-    fun read(fileName: String): Result<FiniteAutomaton> {
+    fun read(file: File): Result<FiniteAutomaton> {
+        return try {
+            val reader = FileReader(file)
+            read(reader)
+        } catch (e: IOException){
+            Result.failure(e)
+        }
+    }
+
+    fun read(filename: String): Result<FiniteAutomaton> {
+        return try {
+            val reader = FileReader(filename)
+            read(reader)
+        } catch (e: IOException){
+            Result.failure(e)
+        }
+    }
+
+    fun read(fileReader: FileReader): Result<FiniteAutomaton> {
 
         fun requireFormat(cond: Boolean, msg: String) {
             if (!cond) throw IOException("illegal format: $msg")
@@ -52,7 +88,7 @@ object AutomatonIO {
         }
 
         try {
-            val lines = FileReader(fileName).use {
+            val lines = fileReader.use {
                 it.readLines()
             }
                 .map { it.dropWhile(Char::isWhitespace).dropLastWhile(Char::isWhitespace) }

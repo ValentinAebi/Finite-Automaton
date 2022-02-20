@@ -29,8 +29,8 @@ class MutableAlphabet {
         listeners.add(listener)
     }
 
-    fun removeListener(listener: GuiTransition){
-        listeners.remove(listener)
+    fun removeListeners(listenersToRemove: List<GuiTransition>){
+        listeners.removeAll(listenersToRemove)
     }
 
     fun getCurrentSymbols(): List<Symbol> = symbols.toList()

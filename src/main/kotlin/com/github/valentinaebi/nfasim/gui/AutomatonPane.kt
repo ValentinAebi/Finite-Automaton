@@ -29,14 +29,10 @@ class AutomatonPane(val alphabet: MutableAlphabet): Pane() {
         return actuallyAdd
     }
 
-    fun remove(state: GuiState){
-        states.remove(state)
-        for (transition in transitions){
-            if (transition.from == state || transition.to == state){
-                remove(transition)
-            }
-        }
-        children.remove(state)
+    fun removeStates(statesToRemove: List<GuiState>){
+        states.removeAll(statesToRemove)
+        removeTransitions(transitions.filter { statesToRemove.contains(it.from) || statesToRemove.contains(it.to) })
+        children.removeAll(statesToRemove)
         reportMachineUpdate()
     }
 
@@ -51,10 +47,19 @@ class AutomatonPane(val alphabet: MutableAlphabet): Pane() {
         return actuallyAdd
     }
 
-    fun remove(transition: GuiTransition){
-        transitions.remove(transition)
-        children.remove(transition)
-        alphabet.removeListener(transition)
+    fun removeTransitions(transitionsToRemove: List<GuiTransition>){
+        transitions.removeAll(transitionsToRemove)
+        children.removeAll(transitionsToRemove)
+        alphabet.removeListeners(transitionsToRemove)
+        reportMachineUpdate()
+    }
+
+    fun clear(){
+        children.removeAll(transitions)
+        alphabet.removeListeners(transitions)
+        transitions.clear()
+        children.removeAll(states)
+        states.clear()
         reportMachineUpdate()
     }
 

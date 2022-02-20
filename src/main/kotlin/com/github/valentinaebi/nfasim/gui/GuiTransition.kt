@@ -50,6 +50,11 @@ abstract class GuiTransition(val color: Color, val shadowAsShape: Shape): Group(
         return text.split(symbolsDelimiter).map { Symbol.parse(it) }
     }
 
+    fun setTriggeringSymbols(triggSymbStr: String): Boolean {
+        triggeringSymbolsField.text = triggSymbStr
+        return triggeringSymbolsField.text == triggSymbStr
+    }
+
     fun handleAlphabetChange(){
         val newText = triggeringSymbolsField.text
             .split(symbolsDelimiter)

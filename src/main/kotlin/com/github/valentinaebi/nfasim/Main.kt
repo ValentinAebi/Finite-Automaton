@@ -11,7 +11,7 @@ class Main : Application() {
         stage.minWidth = 1415.0
         stage.minHeight = 600.0
         stage.isMaximized = true
-        stage.scene = Scene(ControlledAutomatonPane())
+        stage.scene = Scene(ControlledAutomatonPane(stage))
         stage.show()
     }
 

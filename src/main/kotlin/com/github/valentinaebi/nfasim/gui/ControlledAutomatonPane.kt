@@ -1,5 +1,6 @@
 package com.github.valentinaebi.nfasim.gui
 
+import com.github.valentinaebi.nfasim.automaton.AutomatonIO
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.State
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.Symbol
 import com.github.valentinaebi.nfasim.automaton.FiniteAutomaton.Companion.epsilonStr
@@ -10,17 +11,16 @@ import javafx.geometry.Point2D
 import javafx.geometry.Pos
 import javafx.scene.control.*
 import javafx.scene.input.KeyCode
-import javafx.scene.layout.BorderPane
-import javafx.scene.layout.HBox
-import javafx.scene.layout.Pane
-import javafx.scene.layout.StackPane
+import javafx.scene.layout.*
 import javafx.scene.paint.Color
 import javafx.scene.shape.Line
 import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
+import javafx.stage.FileChooser
+import javafx.stage.Stage
 import kotlin.math.hypot
 
-class ControlledAutomatonPane: BorderPane() {
+class ControlledAutomatonPane(private val ownerWindow: Stage): BorderPane() {
     private val alphabet = MutableAlphabet()
     private val coverPane = Pane()
     val automatonPane = AutomatonPane(alphabet)
@@ -72,8 +72,8 @@ class ControlledAutomatonPane: BorderPane() {
         }
         val deleteButton = Button("Delete")
         deleteButton.onAction = EventHandler {
-            automatonPane.getStates().filter { it.isSelected }.forEach(automatonPane::remove)
-            automatonPane.getTransitions().filter { it.isSelected }.forEach(automatonPane::remove)
+            automatonPane.removeStates(automatonPane.getStates().filter { it.isSelected })
+            automatonPane.removeTransitions(automatonPane.getTransitions().filter { it.isSelected })
         }
         val modeChooser = ChoiceBox<Mode>()
         modeChooser.items.addAll(Mode.values())
@@ -135,8 +135,58 @@ class ControlledAutomatonPane: BorderPane() {
                 runButton.style = "-fx-border-color: red"
             }
         }
-        val bar = HBox(nameField, addStateButton, deleteButton, modeChooser, alphabetLabel, alphabetField, typeLabel,
-            inputLabel, inputTextArea, runButton)
+        val loadButton = Button("Load automaton")
+        loadButton.onAction = EventHandler {
+            val fileChooser = FileChooser()
+            fileChooser.extensionFilters.add(extensionFilter)
+            val fileOpt = fileChooser.showOpenDialog(ownerWindow)
+            fileOpt?.let { file ->
+                AutomatonIO.read(file).onSuccess { automaton ->
+                    automatonPane.clear()
+                    automaton.states.forEach {
+                        val guiState = GuiState(it, automatonPane)
+                        guiState.onMouseClicked = EventHandler { event -> if (event.isStillSincePress) onStateClicked(guiState) }
+                        automatonPane.add(guiState)
+                    }
+                    automaton.transitionFunc
+                        .map { (startStateAndSymbol, endState) ->
+                            Triple(startStateAndSymbol.first, endState, startStateAndSymbol.second)
+                        }
+                        .groupBy { Pair(it.first, it.second) }
+                        .forEach { (_, startEndSymbol) ->
+                            val transitionOpt = createTransitionIfNotAlreadyExists(
+                                automatonPane.getStates().find { it.underlyingState == startEndSymbol[0].first }!!,
+                                automatonPane.getStates().find { it.underlyingState == startEndSymbol[0].second }!!
+                            )
+                            transitionOpt?.let { tr ->
+                                val triggSymbStr = startEndSymbol.map { it.third }.joinToString(separator = ",")
+                                val set = tr.setTriggeringSymbols(triggSymbStr)
+                                if (set){
+                                    automatonPane.add(tr)
+                                    tr.toBack()
+                                }
+                            }
+                        }
+                    alphabet.setSymbols(automaton.alphabet)
+                    automaton.acceptingStates.forEach { state ->
+                        automatonPane.getStates().filter { it.underlyingState == state }.forEach { it.isAccepting = true }
+                    }
+                    automatonPane.getStates().find { it.underlyingState == automaton.initialState }?.let { it.isInit = true }
+                }
+            }
+        }
+        val saveButton = Button("Save automaton")
+        saveButton.disableProperty().bind(automatonPane.isMachineProperty.not())
+        saveButton.onAction = EventHandler {
+            val chooser = FileChooser()
+            chooser.extensionFilters.add(extensionFilter)
+            val fileOpt = chooser.showSaveDialog(ownerWindow)
+            fileOpt?.let { file ->
+                AutomatonIO.write(automatonPane.buildAutomaton(), file)
+            }
+        }
+        val bar = HBox(VBox(HBox(nameField, addStateButton), HBox(deleteButton, modeChooser)), alphabetLabel,
+            alphabetField, typeLabel, inputLabel, inputTextArea, runButton, VBox(loadButton, saveButton))
         bar.alignment = Pos.CENTER_LEFT
         bar.style = "-fx-background-color: lightgray; -fx-spacing: 7;"
         nameField.font = font
@@ -146,6 +196,8 @@ class ControlledAutomatonPane: BorderPane() {
         inputTextArea.font = font
         alphabetLabel.font = font
         alphabetField.font = font
+        loadButton.font = font
+        saveButton.font = font
         typeLabel.font = Font.font(font.family, FontWeight.BOLD, 20.0)
         return bar
     }
@@ -204,20 +256,10 @@ class ControlledAutomatonPane: BorderPane() {
                 }
                 else {
                     partiallyBuiltTransition?.let { (fromState, line) ->
-                        if (!automatonPane.getTransitions().any { it.from == fromState && it.to == state }){
-                            val transition =
-                                if (fromState == state) {
-                                    GuiSelfTransition(fromState, colorSelfTransition, alphabet, automatonPane)
-                                }
-                                else {
-                                    val color =
-                                        if (automatonPane.getTransitions().any { it.from == state && it.to == fromState }) colorTransition2
-                                        else colorTransition1
-                                    GuiStateChangingTransition(fromState, state, color, alphabet, automatonPane)
-                                }
-                            transition.onMouseClicked = EventHandler { event -> if (event.isStillSincePress) onTransitionClicked(transition) }
-                            automatonPane.add(transition)
-                            transition.toBack()
+                        val transition = createTransitionIfNotAlreadyExists(fromState, state)
+                        transition?.let {
+                            automatonPane.add(it)
+                            it.toBack()
                         }
                         automatonPane.children.remove(line)
                     }
@@ -232,6 +274,25 @@ class ControlledAutomatonPane: BorderPane() {
                 state.isInit = !state.isInit
                 automatonPane.getStates().filter { it != state }.forEach { it.isInit = false }
             }
+        }
+    }
+
+    private fun createTransitionIfNotAlreadyExists(from: GuiState, to: GuiState): GuiTransition? {
+        if (!automatonPane.getTransitions().any { it.from == from && it.to == to }) {
+            val transition =
+                if (from == to) {
+                    GuiSelfTransition(from, colorSelfTransition, alphabet, automatonPane)
+                } else {
+                    val color =
+                        if (automatonPane.getTransitions().any { it.from == to && it.to == from }) colorTransition2
+                        else colorTransition1
+                    GuiStateChangingTransition(from, to, color, alphabet, automatonPane)
+                }
+            transition.onMouseClicked = EventHandler { event -> if (event.isStillSincePress) onTransitionClicked(transition) }
+            return transition
+        }
+        else {
+            return null
         }
     }
 
@@ -257,6 +318,7 @@ class ControlledAutomatonPane: BorderPane() {
         private val colorTransition2 = Color.BLUE
         private val colorSelfTransition = Color.PURPLE
         private val font = Font("cambria", 14.0)
+        private val extensionFilter = FileChooser.ExtensionFilter("Finite automaton files (.dfa)", "*.dfa")
     }
 
 }

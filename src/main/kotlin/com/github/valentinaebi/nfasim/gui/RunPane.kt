@@ -104,7 +104,7 @@ class RunPane(val controlledAutomatonPane: ControlledAutomatonPane, val input: L
     }
 
     companion object {
-        private const val maxSymbolsPerLine = 8
+        private const val maxSymbolsPerLine = 20
         private const val closeIconSize = 25.0
         private val font = Font("cambria", 24.0)
     }

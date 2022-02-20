@@ -2,11 +2,7 @@ package com.github.valentinaebi.nfasim.automaton
 
 import com.github.valentinaebi.nfasim.automaton.TestAutomata.simpleDfa
 import com.github.valentinaebi.nfasim.automaton.TestAutomata.simpleNfa
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import java.io.File
-import java.lang.IllegalStateException
 import java.nio.file.Files
 import kotlin.io.path.Path
 

@@ -13,7 +13,7 @@ import javafx.scene.layout.Pane
 import javafx.scene.layout.VBox
 import javafx.scene.text.Font
 
-class RunPane(val controlledAutomatonPane: ControlledAutomatonPane, val input: List<Symbol>): VBox() {
+class RunPane(private val controlledAutomatonPane: ControlledAutomatonPane, input: List<Symbol>): VBox() {
     private val automatonPane = controlledAutomatonPane.automatonPane
     private val automaton = automatonPane.buildAutomaton()
     private val successiveActiveStates = input.fold(
@@ -64,7 +64,7 @@ class RunPane(val controlledAutomatonPane: ControlledAutomatonPane, val input: L
     }
 
     private fun createTopBar(): Pane {
-        val finalStatusLabel = Label("Result: ${finalStatus.toString()}")
+        val finalStatusLabel = Label("Result: $finalStatus")
         finalStatusLabel.font = font
         val closeRunButton = Button()
         closeRunButton.graphic = ImageView(Image(

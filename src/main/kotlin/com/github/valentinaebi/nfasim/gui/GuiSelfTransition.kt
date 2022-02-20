@@ -6,7 +6,7 @@ import javafx.scene.shape.Line
 
 class GuiSelfTransition(
     val state: GuiState,
-    private val _color: Color,
+    _color: Color,
     override val alphabet: MutableAlphabet,
     override val owner: AutomatonPane
 ) : GuiTransition(_color, Circle()) {

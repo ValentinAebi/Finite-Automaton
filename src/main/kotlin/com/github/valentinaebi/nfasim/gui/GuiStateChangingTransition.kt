@@ -8,7 +8,7 @@ import kotlin.math.hypot
 class GuiStateChangingTransition(
         override val from: GuiState,
         override val to: GuiState,
-        private val _color: Color,
+        _color: Color,
         override val alphabet: MutableAlphabet,
         override val owner: AutomatonPane
     ): GuiTransition(_color, Line()) {

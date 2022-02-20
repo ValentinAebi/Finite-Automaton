@@ -10,7 +10,7 @@ import javafx.scene.shape.Polygon
 import javafx.scene.shape.StrokeType
 import javafx.scene.text.Font
 
-class GuiState(val underlyingState: State, val owner: AutomatonPane): Group() {
+class GuiState(val underlyingState: State, private val owner: AutomatonPane): Group() {
     private val mainCircle = Circle(radius, colorInactive)
     private val acceptMarkerCircle = Circle(radius + strokeWidth, Color.TRANSPARENT)
     private val shadow = Circle(shadowRadius, colorShadow)
